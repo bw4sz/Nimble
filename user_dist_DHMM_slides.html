@@ -42,6 +42,23 @@ NIMBLE Development Team
 <h1>Multi-state capture-recapture example</h1>
 <p>We will use the orchid (Showy Lady's Slipper) example from Chapter 9 of Kéry and Schaub (2012)<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a></p>
 <p>We will show code but not take the time to run as a working example.</p>
+<ul>
+<li>States are vegetative (1), flowering (2), dormant (3), or dead (4)</li>
+<li>Observations are &quot;seen vegetative&quot; (1), &quot;seen flowering&quot; (2), or &quot;not seen&quot; (3).</li>
+<li>Data from 250 plants on 11 sampling occassions.</li>
+<li>Capture histories look like:
+<ul>
+<li>1 1 2 2 2 2 1 2 2 2 2</li>
+<li>1 1 0 1 1 1 0 0 0 0 0</li>
+<li>0 0 0 1 2 2 1 0 0 2 2</li>
+</ul></li>
+<li>Observations match state if vegetative (1) or flowering (2) and are &quot;not seen&quot; when dormant (3) or dead (4).</li>
+<li>Although simple, this has the basic math of uncertain states.</li>
+<li>Parameters are survival and probabilities of transitions between states.</li>
+<li>Typical BUGS implementation uses discrete latent state which must be sampled by MCMC.</li>
+<li>For one individual, probability of capture history can be calculated from a Dynamic Hidden Markov Model.</li>
+<li>In NIMBLE we can replace the latent states by a distribution for each capture history.</li>
+</ul>
 </div>
 <div id="typical-bugs-implementation" class="slide section level1">
 <h1>Typical BUGS implementation</h1>
@@ -130,12 +147,14 @@ for (i in <span class="dv">1</span>:nind){
       } <span class="co">#t</span>
    } <span class="co">#i</span>
 }</code></pre>
-<p>Key element is that <code>z[i,t]</code> are latent states (true state of plant i at time t) and hence need MCMC sampling. But in this case many of the states are known with certainty, but we're using it because it is simple.</p>
+<p>Key element is that <code>z[i,t]</code> are latent states (true state of plant i at time t) and hence need MCMC sampling. In this case many of the states are known with certainty, but we're using it because it is simple.</p>
 <p>Actually this code will not run in NIMBLE because it uses stochastic indices. We expect a future version of NIMBLE to support that.</p>
 </div>
 <div id="nimble-implementation-using-a-hidden-markov-model-distribution." class="slide section level1">
 <h1>NIMBLE implementation using a hidden-Markov model distribution.</h1>
 <p>This is from <a href="http://arxiv.org/abs/1601.02698">Turek et al.</a>, recently accepted.</p>
+<p>As commonly recognized, a discrete filtering algorithm can compute the likelihood for an observation history for one individual.</p>
+<p>In the past some other software has used this approach, but not within the full flexibility of BUGS code.</p>
 <pre class="sourceCode r"><code class="sourceCode r">## Filter MCMC for the orchid model
 
 ## load nimble library
@@ -153,13 +172,16 @@ dDHMMorchid &lt;-<span class="st"> </span><span class="kw">nimbleFunction</span>
             sumZpi &lt;-<span class="st"> </span><span class="kw">sum</span>(Zpi)
             logL &lt;-<span class="st"> </span>logL +<span class="st"> </span><span class="kw">log</span>(sumZpi)
             if(t !=<span class="st"> </span>length)
-           pi &lt;-<span class="st"> </span>(T[,,t] %*%<span class="st"> </span><span class="kw">asCol</span>(Zpi) /<span class="st"> </span>sumZpi)[ ,<span class="dv">1</span>]
+           pi &lt;-<span class="st"> </span>(T[,,t] %*%<span class="st"> </span>Zpi /<span class="st"> </span>sumZpi)[ ,<span class="dv">1</span>]
         }
         <span class="kw">returnType</span>(<span class="kw">double</span>())
         <span class="kw">return</span>(logL)
     }
 )
 
+<span class="co"># this is just a stump that doesn't simulate anything,</span>
+<span class="co"># as we know the MCMC we'll use doesn't need to simulate()</span>
+<span class="co"># from DHMMorchid</span>
 rDHMMorchid &lt;-<span class="st"> </span><span class="kw">nimbleFunction</span>(
     <span class="dt">run =</span> function(<span class="dt">n =</span> <span class="kw">integer</span>(), <span class="dt">length =</span> <span class="kw">double</span>(),
                    <span class="dt">prior =</span> <span class="kw">double</span>(<span class="dv">1</span>), <span class="dt">Z =</span> <span class="kw">double</span>(<span class="dv">2</span>),
@@ -173,13 +195,11 @@ rDHMMorchid &lt;-<span class="st"> </span><span class="kw">nimbleFunction</span>
 <span class="kw">registerDistributions</span>(<span class="kw">list</span>(
     <span class="dt">dDHMMorchid =</span> <span class="kw">list</span>(
         <span class="dt">BUGSdist =</span> <span class="st">'dDHMMorchid(length, prior, Z, T)'</span>,
-        <span class="dt">types =</span> <span class="kw">c</span>(<span class="st">'value = double(1)'</span>, <span class="st">'length = double()'</span>, <span class="st">'prior = double(1)'</span>, <span class="st">'Z = double(2)'</span>, <span class="st">'T = double(3)'</span>),
+        <span class="dt">types =</span> <span class="kw">c</span>(<span class="st">'value = double(1)'</span>, <span class="st">'length = double()'</span>, <span class="st">'prior = double(1)'</span>, 
+                  <span class="st">'Z = double(2)'</span>, <span class="st">'T = double(3)'</span>),
         <span class="dt">discrete =</span> <span class="ot">TRUE</span>
     )
 ))
-
-## load data
-<span class="kw">load</span>(<span class="st">'../data/orchidData.RData'</span>)
 
 ## define hierarchical model
 code &lt;-<span class="st"> </span><span class="kw">nimbleCode</span>({
@@ -234,35 +254,8 @@ code &lt;-<span class="st"> </span><span class="kw">nimbleCode</span>({
                    <span class="dt">Z =</span> Z[<span class="dv">1</span>:<span class="dv">3</span>,<span class="dv">1</span>:<span class="dv">4</span>],
                    <span class="dt">T =</span> T[<span class="dv">1</span>:<span class="dv">4</span>,<span class="dv">1</span>:<span class="dv">4</span>,f[i]:k])
     }
-})
-
-## define model constants, data, and initial values
-constants &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">f=</span>f, <span class="dt">k=</span>k, <span class="dt">nind=</span>nind, <span class="dt">prior=</span><span class="kw">c</span>(<span class="dv">1</span>/<span class="dv">2</span>,<span class="dv">1</span>/<span class="dv">2</span>,<span class="dv">0</span>,<span class="dv">0</span>), <span class="dt">Z=</span><span class="kw">array</span>(<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>), <span class="kw">c</span>(<span class="dv">3</span>,<span class="dv">4</span>)))
-data &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">y =</span> y)
-inits &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">s =</span> <span class="kw">rep</span>(<span class="dv">1</span>/<span class="dv">2</span>,k<span class="dv">-1</span>), <span class="dt">a =</span> <span class="kw">rep</span>(<span class="dv">1</span>,<span class="dv">3</span>), <span class="dt">b =</span> <span class="kw">rep</span>(<span class="dv">1</span>,<span class="dv">3</span>), <span class="dt">c =</span> <span class="kw">rep</span>(<span class="dv">1</span>,<span class="dv">3</span>))
-
-## create model object
-Rmodel &lt;-<span class="st"> </span><span class="kw">nimbleModel</span>(code, constants, data, inits, <span class="dt">check =</span> <span class="ot">FALSE</span>)
-
-## specify MCMC algorithm
-spec &lt;-<span class="st"> </span><span class="kw">configureMCMC</span>(Rmodel)
-spec$<span class="kw">printSamplers</span>()
-
-## build MCMC algorithm
-Rmcmc &lt;-<span class="st"> </span><span class="kw">buildMCMC</span>(spec)
-
-## compile model and MCMC
-Cmodel &lt;-<span class="st"> </span><span class="kw">compileNimble</span>(Rmodel)
-Cmcmc &lt;-<span class="st"> </span><span class="kw">compileNimble</span>(Rmcmc, <span class="dt">project =</span> Rmodel)
-
-## run MCMC
-<span class="kw">set.seed</span>(<span class="dv">0</span>)
-Cmcmc$<span class="kw">run</span>(<span class="dv">10000</span>)
-
-## extract samples
-samples &lt;-<span class="st"> </span><span class="kw">as.matrix</span>(Cmcmc$mvSamples)
-<span class="kw">apply</span>(samples, <span class="dv">2</span>, mean)</code></pre>
-<p>Key element is that there are no latent states. <code>dDHMM</code> sums over the latent states using a Hidden Markov Model filtering calculation for each capture history.</p>
+})</code></pre>
+<p>Key element is that there are no latent states because <code>dDHMM</code> sums over the latent states internally.</p>
 </div>
 <div id="results" class="slide section level1">
 <h1>Results</h1>
@@ -274,25 +267,7 @@ samples &lt;-<span class="st"> </span><span class="kw">as.matrix</span>(Cmcmc$mv
 <div class="footnotes slide">
 <hr />
 <ol>
-<li id="fn1"><p>Marc Kéry and Michael Schaub. 2012. Bayesian Population Analysis Using WinBUGS: A hierarchical perspective. Elsevier / Academic Press.</p>
-<ul>
-<li>States are vegetative (1), flowering (2), dormant (3), or dead (4)</li>
-<li>Observations are &quot;seen vegetative&quot; (1), &quot;seen flowering&quot; (2), or &quot;not seen&quot; (3).</li>
-<li>Data from 250 plants on 11 sampling occassions.</li>
-<li>Capture histories look like:
-<ul>
-<li>1 1 2 2 2 2 1 2 2 2 2</li>
-<li>1 1 0 1 1 1 0 0 0 0 0</li>
-<li>0 0 0 1 2 2 1 0 0 2 2</li>
-</ul></li>
-<li>Observations match state if vegetative (1) or flowering (2) and are &quot;not seen&quot; when dormant (3) or dead (4).</li>
-<li>Although simple, this has the basic math of uncertain states.</li>
-<li>Parameters are survival and probabilities of transitions between states.</li>
-<li>Typical BUGS implementation uses discrete latent state which must be sampled by MCMC.</li>
-<li>For one individual, probability of capture history can be calculated from a Dynamic Hidden Markov Model.</li>
-<li>In NIMBLE we can replace the latent states by a distribution for each capture history.</li>
-</ul>
-<a href="#fnref1">↩</a></li>
+<li id="fn1"><p>Marc Kéry and Michael Schaub. 2012. Bayesian Population Analysis Using WinBUGS: A hierarchical perspective. Elsevier / Academic Press.<a href="#fnref1">↩</a></p></li>
 </ol>
 </div>
 </body>
