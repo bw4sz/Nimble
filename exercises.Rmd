@@ -19,7 +19,7 @@ There are ```G=2``` groups of rat litters, with ```N=16```  litters (i.e., mothe
 
 4.) Experiment with different values for the top-level (hyperparameter) nodes in the state-space model, simulating values for the true and observed population sizes over time given hyperparameter values that you choose. Plot these sizes to get a better understanding of how the hyperparameters determine population growth. 
 
-Note that to simulate into data nodes, you'll need to call `model$resetData()` so that NIMBLE allows you to override the values of the data nodes. 
+Note that to simulate into data nodes, you'll need to use the *includeData* argument when calling the *simulate* method. Otherwise, by default NIMBLE will not overwrite data values.
 
 # Compiling R code
 
