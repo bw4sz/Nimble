@@ -136,7 +136,7 @@ tsplot(samples[ , 'sigma.obs'], xlab = 'iteration',
      ylab = 'sigma.obs', main = 'sigma.obs')
 ```
 
-![plot of chunk ssm-mcmc](figure/ssm-mcmc-1.png)
+![](figure/ssm-mcmc-1.png)
 
 # Customizing and MCMC configuration
 
@@ -212,7 +212,7 @@ tsplot(samples2[ , 'sigma.obs'], xlab = 'iteration',
      ylab = 'sigma.obs', main = 'sigma.obs')
 ```
 
-![plot of chunk unnamed-chunk-1](figure/unnamed-chunk-1-1.png)
+![](figure/unnamed-chunk-1-1.png)
 
 # Comparing MCMC configurations
 

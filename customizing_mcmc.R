@@ -12,7 +12,7 @@ library(nimble)
 
 ## ---- ssm-compile--------------------------------------------------------
 
-## ---- ssm-mcmc, fig.width=12, fig.height=5-------------------------------
+## ---- ssm-mcmc, fig.width=12, fig.height=5, fig.cap=""-------------------
 mcmcConf <- buildMCMC(ssm) # can skip mcmcConf
 CssmMCMC <- compileNimble(mcmcConf, project = ssm)
 CssmMCMC$run(10000)
@@ -46,7 +46,7 @@ Cssm <- compileNimble(ssm)
 CssmMCMC2 <- compileNimble(ssmMCMC2, project = ssm)
 CssmMCMC2$run(10000)
 
-## ---- fig.width=12, fig.height=5-----------------------------------------
+## ---- fig.width=12, fig.height=5, fig.cap=""-----------------------------
 samples2 <- as.matrix(CssmMCMC2$mvSamples)
 
 par(mfrow = c(1, 3), mai = c(.6, .5, .1, .2))
