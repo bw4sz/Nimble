@@ -70,8 +70,8 @@ NIMBLE Development Team
 
     for (i in <span class="dv">1</span>:M){ 
         z[i] ~<span class="st"> </span><span class="kw">dbern</span>(psi)
-    SX[i] ~<span class="st"> </span><span class="kw">dunif</span>(xl, xu)
-    SY[i] ~<span class="st"> </span><span class="kw">dunif</span>(yl, yu)
+        SX[i] ~<span class="st"> </span><span class="kw">dunif</span>(xl, xu)
+        SY[i] ~<span class="st"> </span><span class="kw">dunif</span>(yl, yu)
 
         for(j in <span class="dv">1</span>:ntraps) {
             D2[i,j] &lt;-<span class="st"> </span><span class="kw">pow</span>(SX[i]-trapmat[j,<span class="dv">1</span>], <span class="dv">2</span>) +<span class="st"> </span><span class="kw">pow</span>(SY[i]-trapmat[j,<span class="dv">2</span>], <span class="dv">2</span>)
@@ -100,8 +100,8 @@ NIMBLE Development Team
 
     for (i in <span class="dv">1</span>:M){ 
         z[i] ~<span class="st"> </span><span class="kw">dbern</span>(psi)
-    SX[i] ~<span class="st"> </span><span class="kw">dunif</span>(xl, xu)
-    SY[i] ~<span class="st"> </span><span class="kw">dunif</span>(yl, yu)
+        SX[i] ~<span class="st"> </span><span class="kw">dunif</span>(xl, xu)
+        SY[i] ~<span class="st"> </span><span class="kw">dunif</span>(yl, yu)
         D2[i,<span class="dv">1</span>:ntraps] &lt;-<span class="st"> </span><span class="kw">pow</span>(SX[i]-trapmat[<span class="dv">1</span>:ntraps,<span class="dv">1</span>], <span class="dv">2</span>) +
 <span class="st">                          </span><span class="kw">pow</span>(SY[i]-trapmat[<span class="dv">1</span>:ntraps,<span class="dv">2</span>],<span class="dv">2</span>)
         Eo[i,<span class="dv">1</span>:ntraps] &lt;-<span class="st"> </span>lam0*<span class="kw">exp</span>(-D2[i,<span class="dv">1</span>:ntraps]/sigma)
