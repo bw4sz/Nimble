@@ -151,13 +151,23 @@ m<-nimble::nimbleModel(code=
     beta3_sigma<-pow(1/beta3_tau,0.5)
 
                          })
-,constants=list(Birds=Birds,Plants=Plants,Times=Times,Bird=1:Birds,Plant=1:Plants,Time=1:Times,Nobs=nrow(indat),Bird=indat$jBird,Time=indat$jTime,Plant=indat$jPlant),data
-  =list(
-  Yobs_camera = indat$Camera,
-  Yobs_transect = indat$Transect,
-  resources=resourceMatrix,
-  cam_surveys= (indat$Survey_Type=="Camera")*1,
-  trans_surveys= (indat$Survey_Type=="Transect")*1,
-  Traitmatch=jTraitmatch))
+,constants=list(Birds=Birds,
+                Plants=Plants,
+                Times=Times,
+                Bird=1:Birds,
+                Plant=1:Plants,
+                Time=1:Times,
+                Nobs=nrow(indat),
+                Bird=indat$jBird,
+                Time=indat$jTime,
+                Plant=indat$jPlant),
+  data
+    =list(
+    Yobs_camera = indat$Camera,
+    Yobs_transect = indat$Transect,
+    resources=resourceMatrix,
+    cam_surveys= (indat$Survey_Type=="Camera")*1,
+    trans_surveys= (indat$Survey_Type=="Transect")*1,
+    Traitmatch=jTraitmatch))
 
 ```

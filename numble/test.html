@@ -262,14 +262,24 @@ load(&quot;C:/Users/Ben/Documents/NetworkPredict/Observed.RData&quot;)</code></p
     beta3_sigma&lt;-pow(1/beta3_tau,0.5)
 
                          })
-,constants=list(Birds=Birds,Plants=Plants,Times=Times,Bird=1:Birds,Plant=1:Plants,Time=1:Times,Nobs=nrow(indat),Bird=indat$jBird,Time=indat$jTime,Plant=indat$jPlant),data
-  =list(
-  Yobs_camera = indat$Camera,
-  Yobs_transect = indat$Transect,
-  resources=resourceMatrix,
-  cam_surveys= (indat$Survey_Type==&quot;Camera&quot;)*1,
-  trans_surveys= (indat$Survey_Type==&quot;Transect&quot;)*1,
-  Traitmatch=jTraitmatch))</code></pre>
+,constants=list(Birds=Birds,
+                Plants=Plants,
+                Times=Times,
+                Bird=1:Birds,
+                Plant=1:Plants,
+                Time=1:Times,
+                Nobs=nrow(indat),
+                Bird=indat$jBird,
+                Time=indat$jTime,
+                Plant=indat$jPlant),
+  data
+    =list(
+    Yobs_camera = indat$Camera,
+    Yobs_transect = indat$Transect,
+    resources=resourceMatrix,
+    cam_surveys= (indat$Survey_Type==&quot;Camera&quot;)*1,
+    trans_surveys= (indat$Survey_Type==&quot;Transect&quot;)*1,
+    Traitmatch=jTraitmatch))</code></pre>
 <pre><code>## defining model...</code></pre>
 <pre><code>## Error in assignDimensions(dimensions): inconsistent dimensions between constants and dimensions arguments</code></pre>
 </div>
