@@ -4,45 +4,11 @@ library(nimble)
 ## ----chunksetup, include=FALSE-------------------------------------------
 # Following code is only needed for slide generation, not for using R code separately.
 library(methods)
+read_chunk('chunks_ssm_reparam.R')
 
-## ------------------------------------------------------------------------
-ssmCodeAlt <- nimbleCode({
-# Priors and constraints
-logN.est[1] ~ dnorm(5.6, 0.01)       # Prior for initial population size
-mean.r ~ dnorm(1, 0.001)             # Prior for mean growth rate
-sigma.proc ~ dunif(0, 1)             # Prior for sd of state process
-sigma.obs ~ dunif(0, 1)              # Prior for sd of observation process
+## ---- ssm-code-----------------------------------------------------------
 
-# Likelihood
-# State process
-for (t in 1:(T-1)){
-   logN.est[t+1] ~ dnorm(logN.est[t] + mean.r, sd = sigma.proc)
-   }
-# Observation process
-for (t in 1:T) {
-   y[t] ~ dnorm(logN.est[t], sd = sigma.obs)
-   }
-
-# Population sizes on real scale
-for (t in 1:T) {
-   N.est[t] <- exp(logN.est[t])
-   }
-})
-
-pyears <- 6 # Number of future years with predictions
-hm <- c(271, 261, 309, 318, 231, 216, 208, 226, 195, 226, 233, 209, 226, 192, 191, 225,
-        245, 205, 191, 174, rep(NA, pyears))
-year <- 1990:(2009 + pyears)
-
-# Bundle data
-bugs.data <- list(y = log(hm), T = length(year))
-## NIMBLE will handle y as data, T as a constant
-
-set.seed(1)
-inits <- function(){list(sigma.proc = runif(1, 0, 1), mean.r = rnorm(1),
-                         sigma.obs = runif(1, 0, 1), logN.est = c(rnorm(1, 5.6, 0.1),
-                                                         rep(NA, (length(year)-1))))}
-ssm <- nimbleModel(ssmCodeAlt, constants = bugs.data, inits = inits()) 
+## ---- ssm-model----------------------------------------------------------
 
 ## ------------------------------------------------------------------------
 ## buildAuxiliaryFilter is "just" a nimbleFunction
@@ -61,11 +27,12 @@ pmcmcConf$addSampler(target = 'sigma.obs', type = 'RW_PF',
                       control = list(filterType = 'bootstrap', latents = 'logN.est'))
 pmcmc <- buildMCMC(pmcmcConf)
 Cpmcmc <- compileNimble(pmcmc, project = ssm, resetFunctions = TRUE)
-Cpmcmc$run(1000)
-plot(as.matrix(Cpmcmc$mvSamples)[,'mean.r'],
-               xlab = 'iteration', ylab = 'mean.r')
-plot(as.matrix(Cpmcmc$mvSamples)[,'sigma.obs'],
-               xlab = 'iteration', ylab = 'sigma.obs')
+nIts <- 1000
+Cpmcmc$run(nIts)
+plot(seq_len(nIts), as.matrix(Cpmcmc$mvSamples)[,'mean.r'],
+               xlab = 'iteration', ylab = 'mean.r', type = 'l')
+plot(seq_len(nIts), as.matrix(Cpmcmc$mvSamples)[,'sigma.obs'],
+               xlab = 'iteration', ylab = 'sigma.obs', type = 'l')
 
 ## ------------------------------------------------------------------------
 wrapAPF <- nimbleFunction(
@@ -136,10 +103,10 @@ pmcmcConf2$addSampler(target = 'sigma.obs', type = RW_llFunction_new,
 pmcmc2 <- buildMCMC(pmcmcConf2)
 Cpmcmc2 <- compileNimble(pmcmc2, project = ssm, resetFunctions = TRUE)
 
-## ---- fig.cap=TRUE-------------------------------------------------------
-Cpmcmc2$run(1000)
-plot(as.matrix(Cpmcmc2$mvSamples)[,'mean.r'],
-      xlab = 'iteration', ylab = 'mean.r')
-plot(as.matrix(Cpmcmc2$mvSamples)[,'sigma.obs'],
-      xlab = 'iteration', ylab = 'sigma.obs')
+## ---- fig.cap=""---------------------------------------------------------
+Cpmcmc2$run(nIts)
+plot(seq_len(nIts), as.matrix(Cpmcmc2$mvSamples)[,'mean.r'],
+      xlab = 'iteration', ylab = 'mean.r', type = 'l')
+plot(seq_len(nIts), as.matrix(Cpmcmc2$mvSamples)[,'sigma.obs'],
+      xlab = 'iteration', ylab = 'sigma.obs', type = 'l')
 
