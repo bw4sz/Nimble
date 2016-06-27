@@ -10,9 +10,51 @@ output: html_document
 load("C:/Users/Ben/Documents/NetworkPredict/Observed.RData")
 ```
 
-```{r,eval=T,strip.white=T}
-source("Bayesian/NmixturePoissonRagged2m.R")
+Here is the data
+```{r}
+head(indat)
+```
 
+
+#Hierarchical Occupancy Model
+
+For hummingbird species i feeding on plant species j observed at time k and sampling event observed by transect (YTransect) or camera (YCamera)
+
+Observation Model:
+
+$$ YTransect_{i,j,k,d} \sim Bernoulli(\omega_{Transect}) $$
+$$ YCamera_{i,j,k,d} \sim Bernoulli(\omega_{Camera}) $$
+$$ \omega_{Camera} <- \phi_{Camera} * EffortCamera_k $$
+$$ \omega_{Transect} <- \phi_{Transect}* EffortTransect_k $$
+
+Process Model:
+
+$$ p_{i,j,k} \sim Bernoulli(\rho_{i,j,k}) $$
+$$ logit(\rho_{i,j,k}) = \alpha_i + \beta_{1,i} * Traitmatch_{i,j} + \beta_{2,i} *Resources_k + \beta_{3,i} * Traitmatch_{i,j} * Resources_k $$
+
+**Priors**
+
+$$ \phi_{Camera} \sim U(0,1) $$
+$$ \phi_{Transect} \sim U(0,1) $$
+$$\alpha_i \sim Normal(\alpha_\mu,\alpha_\tau)$$
+$$\beta_{1,i} \sim Normal(\mu_{\beta_1,\tau_{beta_1}})$$
+$$\beta_{2,i} \sim Normal(\mu_{\beta_2,\tau_{beta_2}})$$
+$$\beta_{3,i} \sim Normal(\mu_{\beta_3,\tau_{beta_3}})$$
+
+Group Level Means
+$$ \mu_\alpha \sim Normal(0,0.0001)$$
+$$\mu_{\beta_1} \sim Normal(0,0.0001)$$
+$$\mu_{\beta_2} \sim Normal(0,0.0001)$$
+$$\mu_{\beta_3} \sim Normal(0,0.0001)$$
+
+Group Level Variance
+$$\tau_{\alpha} \sim Uniform(0,1000)$$
+$$\tau_{\beta_1} \sim Uniform(0,1000)$$
+$$\tau_{\beta_2} \sim Uniform(0,1000)$$
+$$\tau_{\beta_3} \sim Uniform(0,1000)$$
+
+
+```{r,eval=T,error=TRUE}
 m<-nimble::nimbleModel(code=
                         quote({
                           
